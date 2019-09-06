@@ -1,0 +1,14 @@
+# R
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+
+# Project files
+data/*
+
+# Mac OS X
+**/*.DS_Store
+
+# Looker API
+**/*.ini
