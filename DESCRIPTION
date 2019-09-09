@@ -2,7 +2,8 @@ Type: Repo
 Title: Score Modeling Tool Submissions
 Version: 0.1.0
 Authors@R: c(
-    person("Samuel", "Crane",  email = "scrane@amplify.com", role = c("aut","cre")))
+    person("Samuel", "Crane",  email = "scrane@amplify.com", role = c("aut","cre")), 
+    person("Ludmila", "Janda", email = "ljanda@amplify.com", role = c("aut"))
 Description: Score individual submissions to the Amplify Science 
     Modeling Tool web apps. Currently only supports one unit:
     Earth's Changing CLimate.
