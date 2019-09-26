@@ -3,17 +3,46 @@ title: "Molecule Task"
 output: html_notebook
 ---
 
-This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
-
-Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Cmd+Shift+Enter*. 
-
-```{r}
-plot(cars)
+```{r setup, include=TRUE, echo=TRUE, message = FALSE}
+knitr::opts_chunk$set(message = FALSE)
+library(tidyverse)
+library(here)
+library(C50)
+library(caret)
+source(here("01_tidy", "tidy_molecule.r"))
+source(here("02_analysis", "helpers.R"))
 ```
 
-Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Cmd+Option+I*.
+```{r }
+molecule_split <- split_data(data        = molecule_derived,
+                             split_ratio = 0.70,
+                             seed        = 123)
 
-When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Cmd+Shift+K* to preview the HTML file). 
+```
 
-The preview shows you a rendered HTML copy of the contents of the editor. Consequently, unlike *Knit*, *Preview* does not run any R code chunks. Instead, the output of the chunk when it was last run in the editor is displayed.
+```{r}
+molecule_variables <- c("gas_left", "gas_right", "gas_correct", "gas_absent")
+```
+
+```{r molecule}
+dt_molecule <- C5.0(x = as.data.frame(molecule_split$data[[1]][,molecule_variables]), 
+                    y = molecule_split$data[[1]]$molecule, 
+                    trials = 3)
+
+summary(dt_molecule)
+
+plot(dt_molecule)
+```
+
+```{r concentration}
+
+```
+
+```{r absorption}
+
+```
+
+```{r transfer}
+
+```
 
