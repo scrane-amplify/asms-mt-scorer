@@ -47,6 +47,12 @@ molecule_derived <-
   molecule_raw %>% 
   mutate_at(13:18, ~if_else(is.na(.), "absent", .)) %>% 
   mutate(
+    left_absorbed_energy = factor(left_absorbed_energy), 
+    left_gas = factor(left_gas), 
+    left_transferred_energy = factor(left_transferred_energy), 
+    right_absorbed_energy = factor(right_absorbed_energy),
+    right_gas = factor(right_gas),
+    right_transferred_energy = factor(right_transferred_energy),
     concentration_left = str_extract(left_gas, concentration_values),
     concentration_left = factor(concentration_left, levels = c("absent", "low", "medium", "high"), 
                                 ordered = TRUE),
@@ -84,7 +90,10 @@ molecule_derived <-
     absorbed_compare_correct = ifelse(absorbed_levels_left == "absent" & 
                                         absorbed_levels_right == "absent", 2, absorbed_compare_correct),
     
-    molecule = factor(molecule))
+    molecule = factor(molecule),
+    concentration = factor(concentration),
+    absorption = factor(absorption),
+    transfer = factor(transfer))
 
 # matched$gas_left <- as.factor(matched$gas_left)
 # matched$gas_right <- as.factor(matched$gas_right)
