@@ -20,12 +20,21 @@ molecule_split <- split_data(data        = molecule_derived,
 
 ```
 
-```{r}
-molecule_variables <- c("gas_left", "gas_right", "gas_correct", "gas_absent")
+```{r variable}
+raw_variables <- c("left_absorbed_energy", 
+                   "left_gas", 
+                   "right_absorbed_energy",
+                   "right_gas",
+                   "right_transferred_energy")
+molecule_derived_variables <- c("gas_left", "gas_right", "gas_correct", "gas_absent")
+molecule_exact_variables <- c("molecule","gas_left", "gas_right", "gas_correct", "gas_absent")
+concentration_exact_variables <- c("concentration", "concentration_left", "concentration_right")
+absorption_exact_variables <- c("absorption", "absorbed_levels_left", "absorbed_levels_right")
+transfer_exact_variables <- c("transfer", "right_transferred_energy")
 ```
 
-```{r molecule}
-dt_molecule <- C5.0(x = as.data.frame(molecule_split$data[[1]][,molecule_variables]), 
+```{r molecule-raw}
+dt_molecule <- C5.0(x = as.data.frame(molecule_split$data[[1]][,raw_variables]), 
                     y = molecule_split$data[[1]]$molecule, 
                     trials = 3)
 
@@ -34,15 +43,103 @@ summary(dt_molecule)
 plot(dt_molecule)
 ```
 
-```{r concentration}
+```{r molecule-derived}
+dt_molecule <- C5.0(x = as.data.frame(molecule_split$data[[1]][,molecule_derived_variables]), 
+                    y = molecule_split$data[[1]]$molecule, 
+                    trials = 3)
+
+summary(dt_molecule)
+
+plot(dt_molecule)
+```
+
+```{r molecule-exact}
+exact <- as.data.frame(molecule_split$data[[1]][,molecule_exact_variables])
+
+exact_summary <-
+  exact %>% 
+  mutate(score = case_when(gas_correct == TRUE ~ "accept",
+                           gas_correct == FALSE & gas_absent == FALSE ~ "reject",
+                           gas_correct == FALSE & gas_absent == TRUE ~ "ignore"),
+         score = factor(score))
+
+confusionMatrix(data = exact_summary$score, reference = exact_summary$molecule)
+```
+
+```{r concentration-raw}
+dt_concentration <- C5.0(x = as.data.frame(molecule_split$data[[1]][,raw_variables]), 
+                    y = molecule_split$data[[1]]$concentration, 
+                    trials = 3)
+
+summary(dt_concentration)
+
+plot(dt_concentration)
+```
+
+```{r concentration-exact}
+exact_concentration <- as.data.frame(molecule_split$data[[1]][,concentration_exact_variables])
+
+exact_concentration_summary <-
+  exact_concentration %>% 
+  mutate(score = case_when(concentration_left == "absent" & concentration_right == "absent" ~ "ignore",
+                           concentration_left < concentration_right ~ "accept",
+                           concentration_left > concentration_right ~ "reject",
+                           concentration_left == concentration_right ~ "reject"),
+         score = factor(score))
+
+confusionMatrix(data = exact_concentration_summary$score, reference = exact_concentration_summary$concentration)
+```
+
+```{r absorption-raw}
+dt_absorption <- C5.0(x = as.data.frame(molecule_split$data[[1]][,raw_variables]), 
+                    y = molecule_split$data[[1]]$absorption, 
+                    trials = 3)
+
+summary(dt_absorption)
+
+plot(dt_absorption)
+```
+
+```{r absorption-exact}
+exact_absorption <- as.data.frame(molecule_split$data[[1]][,absorption_exact_variables])
+
+exact_absorption_summary <-
+  exact_absorption %>% 
+  mutate(score = case_when(absorbed_levels_left == "absent" & absorbed_levels_right == "absent" ~ "ignore",
+                           absorbed_levels_left <  absorbed_levels_right ~ "accept",
+                           absorbed_levels_left >  absorbed_levels_right ~ "reject",
+                           absorbed_levels_left == absorbed_levels_right ~ "reject"),
+         score = factor(score))
+
+confusionMatrix(data = exact_absorption_summary$score, reference = exact_absorption_summary$absorption)
+```
+
+```{r transfer-raw}
+dt_transfer <- C5.0(x = as.data.frame(molecule_split$data[[1]][,raw_variables]), 
+                    y = molecule_split$data[[1]]$transfer, 
+                    trials = 3)
+
+summary(dt_transfer)
+
+plot(dt_transfer)
+```
+
+```{r transfer-exact}
+exact_transfer <- as.data.frame(molecule_split$data[[1]][,transfer_exact_variables])
+
+exact_transfer_summary <-
+  exact_transfer %>% 
+  mutate(score = case_when(right_transferred_energy == "absent" ~ "ignore",
+                           right_transferred_energy == "more_energy_in" ~ "accept",
+                           right_transferred_energy == "equal_energy_in" ~ "reject",
+                           right_transferred_energy == "more_energy_out" ~ "reject"),
+         score = factor(score))
+
+confusionMatrix(data = exact_transfer_summary$score, reference = exact_transfer_summary$transfer)
+```
+
+```{r predictions}
 
 ```
 
-```{r absorption}
-
-```
-
-```{r transfer}
-
-```
 
