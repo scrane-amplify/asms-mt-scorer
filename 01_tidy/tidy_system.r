@@ -2,40 +2,8 @@ library(tidyverse)
 library(jsonlite)
 library(here)
 library(lubridate)
+source("01_tidy/helper_system.R")
 options(digits.secs = 3)
-
-# Functions ----------------------------------------------------------------------------------------
-is_latest_submission <- function(data) {
-  # There are multiple submissions per user, and each submission has multiple rows associated with
-  # the submission that span a range of time. To get the latest submission per user we will first
-  # get the most recent time stamp per submission ID, then get the rows associated with the latest
-  # time per user. This returns the input data frame with the addition of a new boolean variable 
-  # that indicates if the row is part of the latest submission for all rows.
-  data %>% 
-    mutate(request_time = ymd_hms(request_time)) %>% 
-    group_by(body_result_extensions_submission_id, body_actor_account_name) %>%
-    mutate(new_max = max(request_time)) %>% 
-    group_by(body_actor_account_name) %>% 
-    mutate(is_latest_submission = case_when(new_max == max(new_max) ~ TRUE,
-                                            TRUE ~ FALSE)) %>% 
-    ungroup()
-}
-
-parse_labels <- function(json_object) {
-  external_id <- json_object[["External ID"]]
-  absorption_and_emission <- json_object[["Label"]]$`absorption_&_emission_`
-  deflection <- json_object[["Label"]]$deflection
-  activity_business_key <- str_split(json_object[["External ID"]], "_", simplify = TRUE)[1]
-  user_business_key <- json_object[["External ID"]] %>% 
-    str_remove(., ".png") %>% 
-    str_split(., "_", simplify = TRUE) %>% 
-    .[2]
-  bind_cols(external_id = external_id, 
-            absorption_and_emission = absorption_and_emission, 
-            deflection = deflection, 
-            activity_business_key = activity_business_key, 
-            user_business_key = user_business_key)
-}
 
 # Import & clean data ------------------------------------------------------------------------------
 lem <- read_csv(here::here("00_data", "input", "clickstream_27.csv")) %>% 
@@ -99,11 +67,12 @@ system <-
          y_axis = y) 
 
 get_edist <- function(i) {
-  i <- system$submission_id[1]
+  #i <- system$submission_id[1]
   # get euclidean distances    
   df <- filter(system, submission_id == i) %>% 
     rowid_to_column("pt") 
   dist_eucl <- dist(df[ , 7:8], method = "euclidean")
+  # df1 is a matrix (as a data frame) of the distances between objects within a single submission
   df1 <- as.data.frame(round(as.matrix(dist_eucl)[1:nrow(df), 1:nrow(df)], 1)) 
   
   # find sets 
@@ -118,16 +87,19 @@ get_edist <- function(i) {
     filter(flag == 1) %>% 
     select(-flag, -v) %>% 
     group_by(pt) %>% 
-    nest(k, .key = "location_group") %>% 
-    #nest(location_group = c(k)) %>% 
-    mutate(location_group = as.character(location_group)) %>% 
+    summarise(location_group = paste(k, collapse = ", ")) %>% 
+    # nest(k, .key = "location_group") %>% 
+    # nest(location_group = c(k)) %>% 
+    # mutate(location_group = as.character(location_group)) %>% 
     ungroup() 
   
+  # This puts the location_group variable back into the original submission data frame
   df3 <- left_join(df, df2, by = "pt")
   
   df4 <- 
     df3 %>% 
-    select(pt, body_actor_account_name, submission_id, item, location_group, object_id) %>% 
+    select(pt, user_business_key, submission_id, item, location_group, object_id) %>% 
+    # TODO: path objects get a 0 here for 'correct_molecule' but that should probably be an NA
     mutate(correct_molecule = ifelse(str_detect(object_id, "carbon_dioxide|methane"), 1, 0)) %>% 
     group_by(location_group) %>% 
     mutate(nh = sum(item == "head"), 
@@ -141,10 +113,10 @@ get_edist <- function(i) {
   ## get info on whether groups have (head, tail, molecule), (head, tail)     
   df5 <- 
     df4 %>% 
-    group_by(body_actor_account_name, submission_id, location_group, has_htm, has_ht) %>% 
+    group_by(user_business_key, submission_id, location_group, has_htm, has_ht) %>% 
     summarise(n_htm = max(has_htm),  
               n_ht = max(has_ht)) %>% 
-    group_by(body_actor_account_name, submission_id) %>% 
+    group_by(user_business_key, submission_id) %>% 
     summarise(has_htm = max(has_htm), 
               has_ht = max(has_ht), 
               n_htm = sum(n_htm),  
@@ -153,10 +125,10 @@ get_edist <- function(i) {
   
   ## downward deflection: 
   # get info on whether line from a (head, tail, molecule) group is pointing down
-  df6 <- left_join(df4, df, by = c("body_actor_account_name", "submission_id", "pt", "item", "object_id")) 
+  df6 <- left_join(df4, df, by = c("user_business_key", "submission_id", "pt", "item", "object_id")) 
   df7 <- 
     df6 %>% 
-    select(body_actor_account_name, submission_id, id, 
+    select(user_business_key, submission_id, id, 
            location_group, has_htm, item, x_axis, y_axis) %>% 
     mutate(head_with_molecule = ifelse(item == "head" & has_htm == 1, 1, 0)) %>% 
     group_by(id) %>% 
@@ -165,15 +137,33 @@ get_edist <- function(i) {
            ht_diff = ifelse(head_with_molecule == 1, (y_axis - tail_y_axis), 0), 
            htm_ht_diff_pos = ifelse(ht_diff > 0, 1, 0)) %>% 
     ungroup() %>% 
-    group_by(body_actor_account_name, submission_id) %>% 
+    group_by(user_business_key, submission_id) %>% 
     summarise(has_htm_ht_diff_pos = max(htm_ht_diff_pos, na.rm = TRUE), 
               n_htm_ht_diff_pos = sum(htm_ht_diff_pos, na.rm = TRUE))
   
-  df8 <- left_join(df5, df7, by = c("body_actor_account_name", "submission_id"))
+  df8 <- left_join(df5, df7, by = c("user_business_key", "submission_id"))
   df8
 }
 
-subs <- select(system, submission_id, body_actor_account_name) %>% distinct()
+subs <- select(system, submission_id, user_business_key) %>% distinct()
 ed <- map_dfr(subs$submission_id, get_edist)
+
+## feature generation based on difference between head and tail
+# ht_difference <- 
+#   cs_exs %>% 
+#   select(body_actor_account_name, submission_id, id, item, y_axis) %>% 
+#   spread(item, y_axis) %>% 
+#   mutate(ht_diff = (head - tail), 
+#          flag_positive = ifelse(ht_diff > 0, 1, 0), 
+#          flag_negative = ifelse(ht_diff < 0, 1, 0)) %>% 
+#   group_by(body_actor_account_name, submission_id) %>% 
+#   summarise(n_ht_diff_pos = sum(flag_positive, na.rm = TRUE), 
+#             n_ht_diff_neg = sum(flag_negative, na.rm = TRUE)) %>% 
+#   ungroup()
+# 
+# 
+# level_27_features <- left_join(ed, ht_difference, 
+#                                by = c("body_actor_account_name",
+#                                       "submission_id")) 
 
 remove()
