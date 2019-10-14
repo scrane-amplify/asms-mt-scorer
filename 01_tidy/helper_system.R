@@ -29,3 +29,27 @@ parse_labels <- function(json_object) {
             activity_business_key = activity_business_key, 
             user_business_key = user_business_key)
 }
+
+identify_groups <- function(data) {
+  # Takes in a subset of data (post a group_by) and returns a new column on that data. Indicates 
+  # object group composition within the group_by set. 
+  dist_eucl <- dist(data[ , 5:6], method = "euclidean")
+  # t_distances is a matrix (as a data frame) of the distances between objects within a single submission
+  t_distances <- as.data.frame(round(as.matrix(dist_eucl)[1:nrow(data), 1:nrow(data)], 1)) 
+  
+  # find sets 
+  t_groups <- 
+    t_distances %>% 
+    rowid_to_column("pt") %>% 
+    gather(k, v, -pt) %>% 
+    arrange(pt, k) %>%
+    mutate(pt = as.numeric(pt), 
+           k = as.numeric(k), 
+           flag = ifelse(v < 50, 1, 0)) %>% 
+    filter(flag == 1) %>% 
+    select(-flag, -v) %>% 
+    group_by(pt) %>% 
+    summarise(location_group = paste(k, collapse = ", "))
+  
+  return(t_groups$location_group)
+}

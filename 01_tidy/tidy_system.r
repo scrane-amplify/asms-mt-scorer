@@ -66,35 +66,49 @@ system <-
   rename(x_axis = x, 
          y_axis = y) 
 
+
+system_groups <- 
+  system %>% 
+  group_by(submission_id) %>% 
+  mutate(pt = row_number()) %>% 
+  nest() %>% 
+  mutate(location_group = map(data, identify_groups2)) %>% 
+  unnest(cols = c(data, location_group)) %>% 
+  ungroup() %>% 
+  select(user_business_key, submission_id, pt, location_group, everything()) %>% 
+  arrange(user_business_key, submission_id, pt)
+  
+
+
 get_edist <- function(i) {
   #i <- system$submission_id[1]
   # get euclidean distances    
-  df <- filter(system, submission_id == i) %>% 
-    rowid_to_column("pt") 
-  dist_eucl <- dist(df[ , 7:8], method = "euclidean")
-  # df1 is a matrix (as a data frame) of the distances between objects within a single submission
-  df1 <- as.data.frame(round(as.matrix(dist_eucl)[1:nrow(df), 1:nrow(df)], 1)) 
-  
-  # find sets 
-  df2 <- 
-    df1 %>% 
-    rowid_to_column("pt") %>% 
-    gather(k, v, -pt) %>% 
-    arrange(pt, k) %>%
-    mutate(pt = as.numeric(pt), 
-           k = as.numeric(k), 
-           flag = ifelse(v < 50, 1, 0)) %>% 
-    filter(flag == 1) %>% 
-    select(-flag, -v) %>% 
-    group_by(pt) %>% 
-    summarise(location_group = paste(k, collapse = ", ")) %>% 
-    # nest(k, .key = "location_group") %>% 
-    # nest(location_group = c(k)) %>% 
-    # mutate(location_group = as.character(location_group)) %>% 
-    ungroup() 
-  
-  # This puts the location_group variable back into the original submission data frame
-  df3 <- left_join(df, df2, by = "pt")
+  # t_subset <- filter(system, submission_id == i) %>% 
+  #   rowid_to_column("pt") 
+  # dist_eucl <- dist(t_subset[ , 7:8], method = "euclidean")
+  # # t_distances is a matrix (as a data frame) of the distances between objects within a single submission
+  # t_distances <- as.data.frame(round(as.matrix(dist_eucl)[1:nrow(t_subset), 1:nrow(t_subset)], 1)) 
+  # 
+  # # find sets 
+  # t_groups <- 
+  #   t_distances %>% 
+  #   rowid_to_column("pt") %>% 
+  #   gather(k, v, -pt) %>% 
+  #   arrange(pt, k) %>%
+  #   mutate(pt = as.numeric(pt), 
+  #          k = as.numeric(k), 
+  #          flag = ifelse(v < 50, 1, 0)) %>% 
+  #   filter(flag == 1) %>% 
+  #   select(-flag, -v) %>% 
+  #   group_by(pt) %>% 
+  #   summarise(location_group = paste(k, collapse = ", ")) %>% 
+  #   # nest(k, .key = "location_group") %>% 
+  #   # nest(location_group = c(k)) %>% 
+  #   # mutate(location_group = as.character(location_group)) %>% 
+  #   ungroup() 
+  # 
+  # # This puts the location_group variable back into the original submission data frame
+  # df3 <- left_join(t_subset, t_groups, by = "pt")
   
   df4 <- 
     df3 %>% 
