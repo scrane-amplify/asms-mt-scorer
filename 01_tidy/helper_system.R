@@ -53,3 +53,23 @@ identify_groups <- function(data) {
   
   return(t_groups$location_group)
 }
+
+has_downward_deflection <- function(data) {
+  return_data <- 
+    data %>% 
+    select(user_business_key, id, 
+           location_group, has_htm, item, x_axis, y_axis) %>% 
+    mutate(head_with_molecule = ifelse(item == "head" & has_htm == 1, 1, 0)) %>% 
+    group_by(id) %>% 
+    mutate(tail_y_axis = ifelse(item == "tail", y_axis, 0), 
+           tail_y_axis = max(tail_y_axis), 
+           ht_diff = ifelse(head_with_molecule == 1, (y_axis - tail_y_axis), 0), 
+           htm_ht_diff_pos = ifelse(ht_diff > 0, 1, 0)) %>% 
+    ungroup() %>% 
+    group_by(user_business_key) %>% 
+    summarise(has_htm_ht_diff_pos = max(htm_ht_diff_pos, na.rm = TRUE), 
+              n_htm_ht_diff_pos = sum(htm_ht_diff_pos, na.rm = TRUE)) %>% 
+    select(has_htm_ht_diff_pos, n_htm_ht_diff_pos)
+  
+  return(return_data)
+}
