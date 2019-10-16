@@ -54,6 +54,30 @@ identify_groups <- function(data) {
   return(t_groups$location_group)
 }
 
+count_htm <- function(data) {
+  data <- 
+    data %>% 
+    select(location_group, has_htm) %>% 
+    distinct() %>% 
+    mutate(n_htm = sum(has_htm)) %>% 
+    select(n_htm) %>% 
+    distinct()
+  
+  return(data)
+}
+
+count_ht <- function(data) {
+  data <- 
+    data %>% 
+    select(location_group, has_ht) %>% 
+    distinct() %>% 
+    mutate(n_ht = sum(has_ht)) %>% 
+    select(n_ht) %>% 
+    distinct()
+  
+  return(data)
+}
+
 has_downward_deflection <- function(data) {
   return_data <- 
     data %>% 

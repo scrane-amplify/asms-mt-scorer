@@ -83,21 +83,20 @@ system_features <-
          cm = max(correct_molecule), 
          has_htm = ifelse(nh >= 1 & nt >= 1 & nm >= 1 & cm >= 1, 1, 0), 
          has_ht = ifelse(nh >= 1 & nt >= 1 & nm == 0, 1, 0)) %>% 
-  ungroup() %>% 
-  group_by(user_business_key, submission_id, location_group, has_htm, has_ht) %>% 
-  mutate(n_htm = max(has_htm),  
-         n_ht = max(has_ht)) %>% 
-  group_by(user_business_key, submission_id) %>% 
-  mutate(has_htm = max(has_htm), 
-         has_ht = max(has_ht), 
-         n_htm = sum(n_htm),  
-         n_ht = sum(n_ht)) %>% 
-  ungroup() %>% 
+  group_by(submission_id) %>% 
+  nest() %>% 
+  mutate(n_htm = map(data, count_htm)) %>% 
+  unnest(cols = c(data, n_htm)) %>% 
+  nest() %>% 
+  mutate(n_ht = map(data, count_ht)) %>% 
+  unnest(cols = c(data, n_ht)) %>% 
   group_by(submission_id) %>% 
   nest() %>% 
   mutate(values = map(data, has_downward_deflection)) %>% 
   unnest(data) %>% 
-  unnest_wider(values)
+  unnest_wider(values) %>% 
+  mutate(has_htm = max(has_htm),
+         has_ht = max(has_ht))
 
 
 
@@ -186,6 +185,35 @@ get_edist <- function(i) {
 
 subs <- select(system, submission_id, user_business_key) %>% distinct()
 ed <- map_dfr(subs$submission_id, get_edist)
+
+
+
+
+new <- 
+  system_features %>% 
+  ungroup() %>% 
+  select(user_business_key,
+         submission_id,
+         has_htm,
+         has_ht,
+         n_htm,
+         n_ht,
+         has_htm_ht_diff_pos, 
+         n_htm_ht_diff_pos) %>% 
+  distinct() %>% 
+  arrange(user_business_key,
+          submission_id)
+old <-
+  ed %>% 
+  arrange(user_business_key,
+          submission_id)
+  
+identical(new, ed)
+all_equal(new, old)
+
+
+
+
 
 # feature generation based on difference between head and tail
 ht_difference <-
