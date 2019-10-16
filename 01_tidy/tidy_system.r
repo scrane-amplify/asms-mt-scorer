@@ -96,25 +96,11 @@ system_features <-
   unnest(data) %>% 
   unnest_wider(values) %>% 
   mutate(has_htm = max(has_htm),
-         has_ht = max(has_ht))
+         has_ht = max(has_ht)) %>% 
+  group_by(submission_id) %>% 
+  nest() %>% 
+  mutate(diff = map(data, count_distance)) %>% 
+  unnest(data) %>% 
+  unnest_wider(diff) 
 
-
-# feature generation based on difference between head and tail
-ht_difference <-
-  cs_exs %>%
-  select(body_actor_account_name, submission_id, id, item, y_axis) %>%
-  spread(item, y_axis) %>%
-  mutate(ht_diff = (head - tail),
-         flag_positive = ifelse(ht_diff > 0, 1, 0),
-         flag_negative = ifelse(ht_diff < 0, 1, 0)) %>%
-  group_by(body_actor_account_name, submission_id) %>%
-  summarise(n_ht_diff_pos = sum(flag_positive, na.rm = TRUE),
-            n_ht_diff_neg = sum(flag_negative, na.rm = TRUE)) %>%
-  ungroup()
-
-
-level_27_features <- left_join(ed, ht_difference,
-                               by = c("body_actor_account_name",
-                                      "submission_id"))
-
-remove()
+remove(json, labels, lem, system_raw)

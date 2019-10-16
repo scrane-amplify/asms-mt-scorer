@@ -97,3 +97,16 @@ has_downward_deflection <- function(data) {
   
   return(return_data)
 }
+
+count_distance <- function(data) {
+  data %>% 
+    select(id, item, y_axis) %>%
+    spread(item, y_axis) %>%
+    mutate(ht_diff = (head - tail),
+           flag_positive = ifelse(ht_diff > 0, 1, 0),
+           flag_negative = ifelse(ht_diff < 0, 1, 0)) %>%
+    summarise(n_ht_diff_pos = sum(flag_positive, na.rm = TRUE),
+              n_ht_diff_neg = sum(flag_negative, na.rm = TRUE)) %>%
+    ungroup() %>% 
+    select(n_ht_diff_pos, n_ht_diff_neg)
+}
