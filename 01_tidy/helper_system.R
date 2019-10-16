@@ -33,7 +33,7 @@ parse_labels <- function(json_object) {
 identify_groups <- function(data) {
   # Takes in a subset of data (post a group_by) and returns a new column on that data. Indicates 
   # object group composition within the group_by set. 
-  dist_eucl <- dist(data[ , 5:6], method = "euclidean")
+  dist_eucl <- dist(data[ , 8:9], method = "euclidean")
   # t_distances is a matrix (as a data frame) of the distances between objects within a single submission
   t_distances <- as.data.frame(round(as.matrix(dist_eucl)[1:nrow(data), 1:nrow(data)], 1)) 
   

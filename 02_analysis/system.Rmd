@@ -1,0 +1,134 @@
+---
+title: "System Task"
+output: html_notebook
+---
+
+```{r setup, include=TRUE, echo=TRUE, message = FALSE}
+knitr::opts_chunk$set(message = FALSE)
+library(tidyverse)
+library(here)
+library(C50)
+library(caret)
+source(here::here("01_tidy", "tidy_system.r"))
+source(here::here("02_analysis", "helpers.R"))
+```
+
+```{r }
+split <- split_data(data        = system_features,
+                    split_ratio = 0.70,
+                    seed        = 123)
+
+```
+
+```{r}
+raw_variables_labels <- c("deflection",
+                          "absorption_and_emission",
+                          "n",
+                          "n_item",
+                          "max_x",     
+                          "max_y",
+                          "min_x",
+                          "min_y",
+                          "mean_x",
+                          "mean_y",      
+                          "n_head",
+                          "n_tail",
+                          "n_molecule",
+                          "n_path",
+                          "n_carbon",    
+                          "n_methane",
+                          "n_nitrogen",
+                          "n_sulfur",
+                          "x_range",
+                          "y_range",     
+                          "c_max",
+                          "c_mean")
+raw <- as.data.frame(split$data[[1]][,raw_variables_labels])
+
+exact_variables_labels <- c("deflection",
+                            "absorption_and_emission",
+                            "has_htm",
+                            "has_ht",
+                            "n_htm",
+                            "n_ht",
+                            "has_htm_ht_diff_pos",
+                            "n_htm_ht_diff_pos",
+                            "n_ht_diff_pos",
+                            "n_ht_diff_neg")
+
+exact <- as.data.frame(split$data[[1]][,exact_variables_labels])
+
+my_cols <- c("#00AFBB", "#E7B800", "#FC4E07")
+
+pairs(raw[3:22], pch = 19,  cex = 0.5,
+       col = alpha(my_cols[raw$deflection], 0.6),
+       lower.panel=NULL)
+
+pairs(exact[3:10], pch = 19,
+       col = alpha(my_cols[raw$deflection], 0.6),
+       lower.panel=NULL)
+```
+
+
+```{r variable}
+raw_variables <- c("n",
+                   "n_item",
+                   "max_x",     
+                   "max_y",
+                   "min_x",
+                   "min_y",
+                   "mean_x",
+                   "mean_y",      
+                   "n_head",
+                   "n_tail",
+                   "n_molecule",
+                   "n_path",
+                   "n_carbon",    
+                   "n_methane",
+                   "n_nitrogen",
+                   "n_sulfur",
+                   "x_range",
+                   "y_range",     
+                   "c_max",
+                   "c_mean")
+
+exact_variables <- c("has_htm",
+                   "has_ht",
+                   "n_htm",
+                   "n_ht",
+                   "has_htm_ht_diff_pos",
+                   "n_htm_ht_diff_pos",
+                   "n_ht_diff_pos",
+                   "n_ht_diff_neg")
+
+```
+
+```{r deflection-raw}
+dt_system <- C5.0(x = as.data.frame(split$data[[1]][,raw_variables]), 
+                    y = split$data[[1]]$deflection, 
+                    trials = 5)
+
+summary(dt_system)
+predictions <- predict(dt_system, newdata = as.data.frame(split$data[[2]][,raw_variables]), type = "class")
+
+caret::confusionMatrix(predictions, reference = split$data[[2]]$deflection)
+#plot(dt_system)
+```
+
+```{r deflection-exact}
+exact_deflection <- as.data.frame(split$data[[1]][,exact_variables])
+
+exact_deflection_summary <-
+  exact_deflection %>% 
+  mutate(score = case_when(has_htm == 1 ~ "accept",
+                            == "" ~ "accept",
+                            == "" ~ "reject",
+                            == "" ~ "reject"),
+         score = factor(score))
+
+confusionMatrix(data = exact_deflection_summary$score, reference = exact_deflection_summary$transfer)
+
+
+
+
+```

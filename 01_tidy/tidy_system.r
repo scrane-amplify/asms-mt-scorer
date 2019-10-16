@@ -2,7 +2,7 @@ library(tidyverse)
 library(jsonlite)
 library(here)
 library(lubridate)
-source("01_tidy/helper_system.R")
+source(here::here("01_tidy", "helper_system.R"))
 options(digits.secs = 3)
 
 # Import & clean data ------------------------------------------------------------------------------
@@ -44,8 +44,12 @@ system <-
          molecule_x = molecule_x - 385, 
          molecule_y = 617 - molecule_y,
          id         = row_number()) %>% 
+  mutate(absorption_and_emission = factor(absorption_and_emission),
+         deflection = factor(deflection)) %>% 
   select(user_business_key, 
          submission_id, 
+         absorption_and_emission,
+         deflection,
          id, 
          head_x, 
          head_y, 
@@ -59,7 +63,9 @@ system <-
          -id, 
          -submission_id, 
          -user_business_key, 
-         -object_id) %>% 
+         -object_id,
+         -absorption_and_emission,
+         -deflection) %>% 
   filter(!is.na(value)) %>% 
   separate(item_type, c("item", "axis"), "_") %>% 
   spread(axis, value) %>% 
@@ -101,6 +107,42 @@ system_features <-
   nest() %>% 
   mutate(diff = map(data, count_distance)) %>% 
   unnest(data) %>% 
-  unnest_wider(diff) 
+  unnest_wider(diff) %>% 
+  mutate(n = n(),
+         n_item = n_distinct(item),
+         max_x = max(x_axis),
+         max_y = max(y_axis),
+         min_x = min(x_axis),
+         min_y = min(y_axis),
+         mean_x = mean(x_axis),
+         mean_y = mean(y_axis),
+         n_head = sum(item == "head"),
+         n_tail = sum(item == "tail"),
+         n_molecule = sum(item == "molecule"),
+         n_path = sum(grepl("path", object_id)),
+         n_carbon = sum(grepl("carbon", object_id)),
+         n_methane = sum(grepl("methane", object_id)),
+         n_nitrogen = sum(grepl("nitrogen", object_id)),
+         n_sulfur = sum(grepl("sulfur", object_id)),
+         x_range = max_x - min_x,
+         y_range = max_y - min_y,
+         c_max = sqrt((max_x ^ 2) + (max_y ^ 2)),
+         c_mean = sqrt((mean_x ^ 2) + (mean_y ^ 2))) %>% 
+  select(-id,
+         -object_id,
+         -item,
+         -x_axis,
+         -y_axis,
+         -pt,
+         -location_group,
+         -correct_molecule,
+         -nh,
+         -nt,
+         -nm,
+         -cm) %>% 
+  ungroup() %>% 
+  distinct()
 
-remove(json, labels, lem, system_raw)
+
+
+remove(json, labels, lem, system_raw, system)

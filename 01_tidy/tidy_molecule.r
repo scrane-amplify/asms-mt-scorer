@@ -26,8 +26,8 @@ parse_labels <- function(json_object) {
 }
 
 # Load raw data ------------------------------------------------------------------------------------
-json <- read_json(here("00_data", "input", "export-2019-07-08T20_14_21.969Z.json"))
-lem <- read_csv(here("00_data", "input", "clickstream_23.csv"))
+json <- read_json(here::here("00_data", "input", "export-2019-07-08T20_14_21.969Z.json"))
+lem <- read_csv(here::here("00_data", "input", "clickstream_23.csv"))
 
 # Join data ----------------------------------------------------------------------------------------
 labels <- 

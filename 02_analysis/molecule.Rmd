@@ -9,8 +9,8 @@ library(tidyverse)
 library(here)
 library(C50)
 library(caret)
-source(here("01_tidy", "tidy_molecule.r"))
-source(here("02_analysis", "helpers.R"))
+source(here::here("01_tidy", "tidy_molecule.r"))
+source(here::here("02_analysis", "helpers.R"))
 ```
 
 ```{r }
