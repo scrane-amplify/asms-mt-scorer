@@ -14,6 +14,10 @@ source(here::here("02_analysis", "helpers.R"))
 ```
 
 ```{r }
+system_features <- system_features %>% 
+  filter(deflection != "ignore") %>% 
+  mutate(deflection = factor(deflection))
+  
 split <- split_data(data        = system_features,
                     split_ratio = 0.70,
                     seed        = 123)
@@ -58,7 +62,8 @@ exact_variables_labels <- c("deflection",
 
 exact <- as.data.frame(split$data[[1]][,exact_variables_labels])
 
-my_cols <- c("#00AFBB", "#E7B800", "#FC4E07")
+#my_cols <- c("#00AFBB", "#E7B800", "#FC4E07")
+my_cols <- c("#00AFBB", "#FC4E07")
 
 pairs(raw[3:22], pch = 19,  cex = 0.5,
        col = alpha(my_cols[raw$deflection], 0.6),
@@ -104,31 +109,39 @@ exact_variables <- c("has_htm",
 ```
 
 ```{r deflection-raw}
-dt_system <- C5.0(x = as.data.frame(split$data[[1]][,raw_variables]), 
+dt_system_raw <- C5.0(x = as.data.frame(split$data[[1]][,raw_variables]), 
                     y = split$data[[1]]$deflection, 
                     trials = 5)
 
-summary(dt_system)
-predictions <- predict(dt_system, newdata = as.data.frame(split$data[[2]][,raw_variables]), type = "class")
-
-caret::confusionMatrix(predictions, reference = split$data[[2]]$deflection)
+#summary(dt_system_raw)
 #plot(dt_system)
 ```
 
 ```{r deflection-exact}
-exact_deflection <- as.data.frame(split$data[[1]][,exact_variables])
+exact_deflection <- as.data.frame(split$data[[2]][,exact_variables])
 
 exact_deflection_summary <-
-  exact_deflection %>% 
-  mutate(score = case_when(has_htm == 1 ~ "accept",
-                            == "" ~ "accept",
-                            == "" ~ "reject",
-                            == "" ~ "reject"),
+  exact_deflection %>%
+  mutate(score = case_when(has_htm_ht_diff_pos == 1 & 
+                             n_ht_diff_neg >= 1~ "accept" ,
+                           TRUE ~ "reject"),
          score = factor(score))
 
-confusionMatrix(data = exact_deflection_summary$score, reference = exact_deflection_summary$transfer)
+#confusionMatrix(data = exact_deflection_summary$score, reference = split$data[[2]]$deflection)
 
 
 
 
 ```
+
+Positive predictive value is the number of true positive cases (labeled accept and predicted accept) divided by the sum of all positive calls (sum of accept predictions). If there are many true negatives predicted as accepts, then we are telling teachers that their students "get it" when they don't. We want to maximize overall accuracy, PPV, and specificity (i.e., minimize false positives). 
+
+```{r}
+predictions_raw <- predict(dt_system_raw, newdata = as.data.frame(split$data[[2]][,raw_variables]), type = "class")
+caret::confusionMatrix(predictions_raw, reference = split$data[[2]]$deflection)
+
+confusionMatrix(data = exact_deflection_summary$score, reference = split$data[[2]]$deflection)
+```
+
+
+
