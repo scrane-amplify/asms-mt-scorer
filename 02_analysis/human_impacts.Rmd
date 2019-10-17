@@ -1,0 +1,53 @@
+---
+title: "Human Impacts Task"
+output: html_notebook
+---
+
+```{r setup, include=TRUE, echo=TRUE, message = FALSE}
+knitr::opts_chunk$set(message = FALSE)
+library(tidyverse)
+library(here)
+library(C50)
+library(caret)
+source(here::here("01_tidy", "tidy_human_impacts.r"))
+source(here::here("02_analysis", "helpers.R"))
+```
+
+
+```{r }
+human_impacts_split <- split_data(data        = human_impacts_derived,
+                                  split_ratio = 0.70,
+                                  seed        = 123)
+
+```
+
+
+```{r variable}
+raw_variables <- c("left_transferred_energy", 
+                   "right_transferred_energy", 
+                   "left_gas", 
+                   "right_gas", 
+                   "left_gas_level", 
+                   "right_gas_level",
+                   "left_human_factor", 
+                   "right_human_factor",
+                   "left_human_factor_level", 
+                   "right_human_factor_level",
+                   "left_temperature", 
+                   "right_temperature", 
+                   "left_absorbed_energy", 
+                   "right_absorbed_energy", 
+                   "left_ice", 
+                   "right_ice")
+
+transfer_exact_variables <- c("transfer", "left_transferred_energy", "right_transferred_energy")
+molecule_level_derived_variables <- c("left_gas", "right_gas", "left_gas_level", 
+                                      "right_gas_level", "gas_level_correct")
+molecule_level_exact_variables <- c("molecule_concentration", "left_gas", 
+                                    "right_gas", "left_gas_level", "right_gas_level")
+
+absorption_exact_variables <- c("absorption", "left_absorbed_energy", "
+                                right_absorbed_energy")
+
+ice_exact_variables <- c("ice", "left_ice", "right_ice")
+```
