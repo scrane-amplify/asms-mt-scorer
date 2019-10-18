@@ -81,6 +81,37 @@ human_activity_molecule_exact_variables <- c("human_activity_molecule",
                                            "right_human_factor", 
                                            "human_activity_molecule_correct")
 
+
+all_exact_variables                   <- c("left_transferred_energy", 
+                                           "right_transferred_energy", 
+                                           "left_gas", 
+                                           "right_gas", 
+                                           "left_gas_level", 
+                                           "right_gas_level",
+                                           "left_human_factor", 
+                                           "right_human_factor",
+                                           "left_human_factor_level", 
+                                           "right_human_factor_level",
+                                           "left_temperature", 
+                                           "right_temperature", 
+                                           "left_absorbed_energy", 
+                                           "right_absorbed_energy", 
+                                           "left_ice", 
+                                           "right_ice", 
+                                           "transfer_correct", 
+                                           "temperature_correct", 
+                                           "absorption_correct", 
+                                           "ice_correct", 
+                                           "molecule_concentration_correct", 
+                                           "human_activity_concentration_correct", 
+                                           "human_activity_molecule_correct", 
+                                           "transfer", 
+                                           "temperature", 
+                                           "absorption", 
+                                           "ice", 
+                                           "molecule_concentration", 
+                                           "human_activity_concentration", 
+                                           "human_activity_molecule")
 ```
 
 ### Transfer
@@ -115,7 +146,7 @@ dt_temperature <- C5.0(x = as.data.frame(human_impacts_split$data[[1]][,raw_vari
 ```
 
 ```{r temperature-exact}
-exact_transfer_summary <- 
+exact_temperature_summary <- 
   as.data.frame(human_impacts_split$data[[2]][,temperature_exact_variables])
 
 ```
@@ -127,8 +158,8 @@ predictions_raw <-
           type = "class")
 confusionMatrix(predictions_raw, 
                 reference = human_impacts_split$data[[2]]$temperature)
-confusionMatrix(data = exact_transfer_summary$temperature_correct, 
-                reference = exact_transfer_summary$temperature)
+confusionMatrix(data = exact_temperature_summary$temperature_correct, 
+                reference = exact_temperature_summary$temperature)
 ```
 
 
@@ -140,7 +171,7 @@ dt_absorption <- C5.0(x = as.data.frame(human_impacts_split$data[[1]][,raw_varia
 ```
 
 ```{r absorption-exact}
-exact_transfer_summary <- 
+exact_absorption_summary <- 
   as.data.frame(human_impacts_split$data[[2]][,absorption_exact_variables])
 
 ```
@@ -152,70 +183,71 @@ predictions_raw <-
           type = "class")
 confusionMatrix(predictions_raw, 
                 reference = human_impacts_split$data[[2]]$absorption)
-confusionMatrix(data = exact_transfer_summary$absorption_correct, 
-                reference = exact_transfer_summary$absorption)
+confusionMatrix(data = exact_absorption_summary$absorption_correct, 
+                reference = exact_absorption_summary$absorption)
 ```
 
 
 ### Ice
 ```{r ice-raw}
-dt_absorption <- C5.0(x = as.data.frame(human_impacts_split$data[[1]][,raw_variables]), 
+dt_ice <- C5.0(x = as.data.frame(human_impacts_split$data[[1]][,raw_variables]), 
                     y = human_impacts_split$data[[1]]$ice, 
                     trials = 3)
 ```
 
 ```{r ice-exact}
-exact_transfer_summary <- 
+exact_ice_summary <- 
   as.data.frame(human_impacts_split$data[[2]][,ice_exact_variables])
 
 ```
 
 ```{r predictions-ice}
 predictions_raw <- 
-  predict(dt_absorption, 
+  predict(dt_ice, 
           newdata = as.data.frame(human_impacts_split$data[[2]][,raw_variables]), 
           type = "class")
 confusionMatrix(predictions_raw, 
                 reference = human_impacts_split$data[[2]]$ice)
-confusionMatrix(data = exact_transfer_summary$ice_correct, 
-                reference = exact_transfer_summary$ice)
+confusionMatrix(data = exact_ice_summary$ice_correct, 
+                reference = exact_ice_summary$ice)
 ```
 
 
 ### Molecule Concentration
 ```{r molecule_concentration-raw}
-dt_absorption <- C5.0(x = as.data.frame(human_impacts_split$data[[1]][,raw_variables]), 
+dt_molecule_concentration <- C5.0(x = as.data.frame(human_impacts_split$data[[1]][,raw_variables]), 
                     y = human_impacts_split$data[[1]]$molecule_concentration, 
                     trials = 3)
 ```
 
 ```{r molecule_concentration-exact}
-exact_transfer_summary <- 
+exact_molecule_concentration_summary <- 
   as.data.frame(human_impacts_split$data[[2]][,molecule_concentration_exact_variables])
 
 ```
 
 ```{r predictions-molecule_concentration}
 predictions_raw <- 
-  predict(dt_absorption, 
+  predict(dt_molecule_concentration, 
           newdata = as.data.frame(human_impacts_split$data[[2]][,raw_variables]), 
           type = "class")
 confusionMatrix(predictions_raw, 
                 reference = human_impacts_split$data[[2]]$molecule_concentration)
-confusionMatrix(data = exact_transfer_summary$molecule_concentration_correct, 
-                reference = exact_transfer_summary$molecule_concentration)
+confusionMatrix(data = exact_molecule_concentration_summary$molecule_concentration_correct, 
+                reference = exact_molecule_concentration_summary$molecule_concentration)
 ```
 
 
 ### Human Activity Concentration
 ```{r human_activity_concentration-raw}
-dt_absorption <- C5.0(x = as.data.frame(human_impacts_split$data[[1]][,raw_variables]), 
-                    y = human_impacts_split$data[[1]]$human_activity_concentration, 
+dt_human_activity_concentration <- 
+  C5.0(x = as.data.frame(human_impacts_split$data[[1]][,raw_variables]), 
+       y = human_impacts_split$data[[1]]$human_activity_concentration, 
                     trials = 3)
 ```
 
 ```{r human_activity_concentration-exact}
-exact_transfer_summary <- 
+exact_human_activity_concentration_summary <- 
   as.data.frame(human_impacts_split$data[[2]][,human_activity_concentration_exact_variables])
 
 ```
@@ -227,6 +259,57 @@ predictions_raw <-
           type = "class")
 confusionMatrix(predictions_raw, 
                 reference = human_impacts_split$data[[2]]$human_activity_concentration)
-confusionMatrix(data = exact_transfer_summary$human_activity_concentration_correct, 
-                reference = exact_transfer_summary$human_activity_concentration)
+confusionMatrix(data = exact_human_activity_concentration_summary$human_activity_concentration_correct, 
+                reference = exact_human_activity_concentration_summary$human_activity_concentration)
+```
+
+
+### Human Activity Molecule
+```{r human_activity_molecule-raw}
+dt_human_activity_molecule <- C5.0(x = as.data.frame(human_impacts_split$data[[1]][,raw_variables]), 
+                    y = human_impacts_split$data[[1]]$human_activity_molecule, 
+                    trials = 3)
+```
+
+```{r human_activity_molecule-exact}
+exact_human_activity_molecule_summary <- 
+  as.data.frame(human_impacts_split$data[[2]][,human_activity_molecule_exact_variables])
+
+```
+
+```{r predictions-human_activity_molecule}
+predictions_raw <- 
+  predict(dt_human_activity_molecule, 
+          newdata = as.data.frame(human_impacts_split$data[[2]][,raw_variables]), 
+          type = "class")
+confusionMatrix(predictions_raw, 
+                reference = human_impacts_split$data[[2]]$human_activity_molecule)
+confusionMatrix(data = exact_human_activity_molecule_summary$human_activity_molecule_correct, 
+                reference = exact_human_activity_molecule_summary$human_activity_molecule)
+```
+
+
+
+### All
+```{r all-raw}
+dt_all <- C5.0(x = as.data.frame(human_impacts_split$data[[1]][,raw_variables]), 
+                    y = human_impacts_split$data[[1]]$all_correct, 
+                    trials = 3)
+```
+
+```{r all-exact}
+exact_all_summary <- 
+  as.data.frame(human_impacts_split$data[[2]][,all_exact_variables])
+
+```
+
+```{r predictions-all}
+predictions_raw <- 
+  predict(dt_all, 
+          newdata = as.data.frame(human_impacts_split$data[[2]][,raw_variables]), 
+          type = "class")
+confusionMatrix(predictions_raw, 
+                reference = human_impacts_split$data[[2]]$all_correct)
+confusionMatrix(data = exact_all_summary$all_correct, 
+                reference = exact_all_summary$all_correct)
 ```

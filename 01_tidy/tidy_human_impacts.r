@@ -135,7 +135,14 @@ human_impacts_raw <-
          absorption_correct = 
            ifelse(left_absorbed_energy < right_absorbed_energy, "accept", "reject"), 
          ice_correct = ifelse((left_ice > right_ice), "accept", "reject"), 
-         ice_correct = ifelse(left_ice == "0" & right_ice  == "0", "accept", ice_correct))
+         ice_correct = ifelse(left_ice == "0" & right_ice  == "0", "accept", ice_correct), 
+         all_correct = ifelse((transfer_correct == "accept" &
+                                 temperature_correct == "accept" &
+                                 absorption_correct == "accept" &
+                                 ice_correct == "accept" &
+                                 molecule_concentration_correct == "accept" &
+                                 human_activity_concentration_correct == "accept" &
+                                 human_activity_molecule_correct == "accept"), "accept", "reject"))
 
 
 # Join data ----------------------------------------------------------------------------------------
