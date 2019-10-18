@@ -91,7 +91,7 @@ human_impacts_raw <-
                                    "accept", "reject"), 
          left_gas = ifelse(left_gas == "0" & right_gas != "0", right_gas, left_gas), 
          right_gas = ifelse(right_gas == "0" & left_gas != "0", left_gas, right_gas), 
-         gas_level_correct = case_when(
+         molecule_concentration_correct = case_when(
            (left_gas == right_gas) & (left_gas_level < right_gas_level) ~ "accept", 
            TRUE ~ "reject"), 
          left_human_factor = ifelse(left_human_factor == "0" & 
@@ -100,7 +100,7 @@ human_impacts_raw <-
          right_human_factor = ifelse(right_human_factor == "0" & 
                                        left_human_factor != "0", 
                                      left_human_factor, right_human_factor), 
-         human_factor_level_correct = case_when(
+         human_activity_concentration_correct = case_when(
            (left_human_factor == right_human_factor) & 
              (right_human_factor == "combustion" | right_human_factor == "livestock") & 
              (left_human_factor_level < right_human_factor_level)  ~ "accept", 
@@ -108,7 +108,7 @@ human_impacts_raw <-
              (left_human_factor == "forest_cover" | left_human_factor == "gas_capture") &
              (left_human_factor_level > right_human_factor_level) ~ "accept", 
            TRUE ~ "reject"),
-         human_factor_correct = case_when(left_human_factor == "combustion" & 
+         human_activity_molecule_correct = case_when(left_human_factor == "combustion" & 
                                             left_gas == "carbon_dioxide" & 
                                             right_human_factor == "combustion" & 
                                             right_gas == "carbon_dioxide" ~ "accept", 
@@ -132,7 +132,7 @@ human_impacts_raw <-
          temperature_correct = ifelse(is.na(temperature_correct), "reject", temperature_correct), 
          left_temperature = ifelse(is.na(left_temperature), "0", left_temperature), 
          right_temperature = ifelse(is.na(right_temperature), "0", right_temperature), 
-         absorbed_energy_correct = 
+         absorption_correct = 
            ifelse(left_absorbed_energy < right_absorbed_energy, "accept", "reject"), 
          ice_correct = ifelse((left_ice > right_ice), "accept", "reject"), 
          ice_correct = ifelse(left_ice == "0" & right_ice  == "0", "accept", ice_correct))
@@ -146,6 +146,8 @@ labels <-
   filter(!is.na(transfer)) %>% 
   rename(human_activity_molecule = `human_activity_+_molecule`)
 
-human_impacts_derived <- inner_join(labels, human_impacts_raw, by = "user_business_key")
+human_impacts_derived <- inner_join(labels, human_impacts_raw, by = "user_business_key") %>% 
+  mutate_if(is.character, str_replace, "ignore", "reject") %>% 
+  mutate_if(is.character, factor) 
 
 remove(json, labels, lem, human_impacts_raw)
